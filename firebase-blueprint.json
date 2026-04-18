@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public profile information for job seekers.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string", "description": "Full legal name" },
+        "bio": { "type": "string", "description": "Short professional summary" },
+        "contactNumber": { "type": "string" },
+        "profilePhoto": { "type": "string", "format": "uri" },
+        "resumeUrl": { "type": "string", "format": "uri" },
+        "cvUrl": { "type": "string", "format": "uri" },
+        "portfolioUrl": { "type": "string", "format": "uri" },
+        "linkedInUrl": { "type": "string", "format": "uri" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["uid", "fullName", "bio"]
+    },
+    "JobApplication": {
+      "title": "Job Application",
+      "description": "Information about a job application being tracked.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "position": { "type": "string" },
+        "status": { "type": "string", "enum": ["Applied", "Interview", "Assessment", "Offer", "Rejected", "Hired"] },
+        "appliedDate": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "companyName", "position", "status", "appliedDate"]
+    },
+    "ScanHistory": {
+      "title": "Scan History",
+      "description": "Log of when a user's QR code was scanned.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "scannedAt": { "type": "number" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        }
+      },
+      "required": ["userId", "scannedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/applications/{applicationId}": {
+      "schema": "JobApplication",
+      "description": "Job application tracking documents."
+    },
+    "/scans/{scanId}": {
+      "schema": "ScanHistory",
+      "description": "Logging data for each QR scan."
+    }
+  }
+}

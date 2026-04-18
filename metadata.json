@@ -1,0 +1,6 @@
+{
+  "name": "Keyfolio",
+  "description": "A premium digital resume tool helping job seekers turn physical QR keychains into smart profile pages. Includes application tracking, file management, and job fair maps.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}

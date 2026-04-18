@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Inter", "Helvetica Neue", Arial, sans-serif;
+  
+  --color-gold: #D4AF37;
+  --color-red: #CE1126;
+  --color-white: #FFFFFF;
+  --color-gray-100: #F8F9FA;
+  --color-gray-200: #E9ECEF;
+  --color-gray-800: #343A40;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-100 text-gray-800 antialiased;
+  }
+}
+
+.card {
+  @apply bg-white rounded-[20px] shadow-[0_8px_30px_rgba(0,0,0,0.1)] p-6 border border-gray-200 transition-all;
+}
+
+.stat-item {
+  @apply bg-gray-100 p-4 rounded-[16px] border-l-4 border-gold;
+}
+
+.btn-primary {
+  @apply bg-red text-white font-bold py-3.5 px-6 rounded-[12px] hover:opacity-90 transition-opacity;
+}
+
+.btn-secondary {
+  @apply bg-white text-gold font-bold py-3.5 px-6 rounded-[12px] border-2 border-gold hover:bg-gold/5 transition-all;
+}
+
+.logo-icon {
+  @apply w-8 h-8 rounded-lg;
+  background: linear-gradient(135deg, #D4AF37, #CE1126);
+}
+
+.qr-container {
+  @apply rounded-[24px] p-5 flex flex-col items-center gap-4 border-2 border-dashed border-gold;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+}
+
+.status-applied {
+  @apply bg-[#E3F2FD] text-[#1976D2] px-2 py-1 rounded-full text-[10px] font-extrabold uppercase;
+}
+
+.status-interview {
+  @apply bg-[#FFF3E0] text-[#EF6C00] px-2 py-1 rounded-full text-[10px] font-extrabold uppercase;
+}

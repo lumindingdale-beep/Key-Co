@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Phase 4: Validation Blueprints
+    function isValidProfile(data) {
+      return data.uid == request.auth.uid
+        && data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 100
+        && data.bio is string && data.bio.size() <= 500
+        && data.contactNumber is string && data.contactNumber.size() <= 20
+        && (data.profilePhoto == null || (data.profilePhoto is string && data.profilePhoto.size() <= 1024))
+        && (data.resumeUrl == null || (data.resumeUrl is string && data.resumeUrl.size() <= 1024))
+        && (data.cvUrl == null || (data.cvUrl is string && data.cvUrl.size() <= 1024))
+        && (data.portfolioUrl == null || (data.portfolioUrl is string && data.portfolioUrl.size() <= 1024))
+        && (data.linkedInUrl == null || (data.linkedInUrl is string && data.linkedInUrl.size() <= 1024))
+        && data.updatedAt == request.time;
+    }
+
+    function isValidApplication(data) {
+      return data.userId == request.auth.uid
+        && data.companyName is string && data.companyName.size() > 0 && data.companyName.size() <= 100
+        && data.position is string && data.position.size() > 0 && data.position.size() <= 100
+        && data.status in ['Applied', 'Interview', 'Assessment', 'Offer', 'Rejected', 'Hired']
+        && data.appliedDate is number
+        && (data.notes == null || (data.notes is string && data.notes.size() <= 1000));
+    }
+
+    function isValidScan(data) {
+      return data.userId is string && data.userId.size() <= 128
+        && data.scannedAt == request.time;
+    }
+
+    // --- Collections ---
+
+    // Users / Profiles
+    match /users/{userId} {
+      allow get: if true; // Public profiles are readable by ID (scanned QR)
+      allow list: if isSignedIn(); // Basic searching (could be restricted further)
+      
+      allow create: if isOwner(userId) && isValidId(userId) && isValidProfile(incoming())
+                    && incoming().keys().hasAll(['uid', 'fullName', 'bio', 'updatedAt'])
+                    && incoming().keys().size() <= 10;
+                    
+      allow update: if isOwner(userId) && isValidProfile(incoming())
+                    && incoming().uid == existing().uid // Immutable UID
+                    && (
+                      incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'bio', 'contactNumber', 'profilePhoto', 'resumeUrl', 'cvUrl', 'portfolioUrl', 'linkedInUrl', 'updatedAt'])
+                    );
+    }
+
+    // Job Applications
+    match /applications/{appId} {
+      allow get: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() && isValidId(appId) && isValidApplication(incoming())
+                    && incoming().keys().hasAll(['userId', 'companyName', 'position', 'status', 'appliedDate'])
+                    && incoming().keys().size() <= 10;
+                    
+      allow update: if isSignedIn() && isOwner(existing().userId) && isValidApplication(incoming())
+                    && incoming().userId == existing().userId // Immutable ownership
+                    && (
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'companyName', 'position', 'appliedDate'])
+                    );
+      
+      allow delete: if isSignedIn() && isOwner(existing().userId);
+    }
+
+    // Scans
+    match /scans/{scanId} {
+      // Anyone can log a scan (when scanning a QR)
+      allow create: if isValidId(scanId) && isValidScan(incoming())
+                    && incoming().keys().hasAll(['userId', 'scannedAt'])
+                    && incoming().keys().size() <= 5;
+                    
+      // Only the profile owner can see their scan logs
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      // Scans are immutable
+      allow update, delete: if false;
+    }
+  }
+}
